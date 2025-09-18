@@ -1,0 +1,36 @@
+name: Daily Campus Scraper
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # Runs every day at 2 AM UTC
+  workflow_dispatch:       # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run scraper
+        run: node scraper.js
+        env:
+          CAMPUS_ID: ${{ secrets.CAMPUS_ID }}
+          CAMPUS_PWD: ${{ secrets.CAMPUS_PWD }}
+
+      - name: Commit and push results
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add dayorder.json
+          git commit -m "Auto-update day order" || echo "No changes to commit"
+          git push
